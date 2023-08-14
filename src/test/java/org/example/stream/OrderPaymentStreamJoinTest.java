@@ -1,6 +1,5 @@
 package org.example.stream;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.TestInputTopic;
@@ -30,17 +29,10 @@ class OrderPaymentStreamJoinTest {
     void createStream() {
         Instant reference = Instant.now().minusSeconds(9999999);
         var timestampSupplier = new TimestampSupplier(reference, 0);
-        InstancioApi<Order> orderInstancioApi = Instancio.of(Order.class)
-                .generate(field(Order::getId), gen -> gen.intSeq().start(1))
-                .supply(field(Order::getCreatedOn), timestampSupplier)
-                .generate(field(Order::getDescription), gen -> gen.text().loremIpsum().words(10));
+        InstancioApi<Order> orderInstancioApi = getGenerate(timestampSupplier);
 
         TimestampSupplier paymentTimestampSupplier = new TimestampSupplier(reference, 5);
-        InstancioApi<Payment> paymentInstancioApi = Instancio.of(Payment.class)
-                .generate(field(Payment::getId), gen -> gen.intSeq().start(10))
-                .generate(field(Payment::getOrderId), gen -> gen.intSeq().start(1))
-                .generate(field(Payment::getAmount), gen -> gen.doubles().range((double) 0, 1000.0).as(BigDecimal::valueOf))
-                .supply(field(Payment::getCreatedOn), paymentTimestampSupplier);
+        InstancioApi<Payment> paymentInstancioApi = getPaymentSupplier(paymentTimestampSupplier);
 
 
         OrderPaymentStreamJoin stream = new OrderPaymentStreamJoin();
@@ -57,12 +49,27 @@ class OrderPaymentStreamJoinTest {
 
     }
 
-    private static Properties getProperties() {
+    public static InstancioApi<Payment> getPaymentSupplier(TimestampSupplier paymentTimestampSupplier) {
+        return Instancio.of(Payment.class)
+                .generate(field(Payment::getId), gen -> gen.intSeq().start(10))
+                .generate(field(Payment::getOrderId), gen -> gen.intSeq().start(1))
+                .generate(field(Payment::getAmount), gen -> gen.doubles().range((double) 0, 1000.0).as(BigDecimal::valueOf))
+                .supply(field(Payment::getCreatedOn), paymentTimestampSupplier);
+    }
+
+    public static InstancioApi<Order> getGenerate(TimestampSupplier timestampSupplier) {
+        return Instancio.of(Order.class)
+                .generate(field(Order::getId), gen -> gen.intSeq().start(1))
+                .supply(field(Order::getCreatedOn), timestampSupplier)
+                .generate(field(Order::getDescription), gen -> gen.text().loremIpsum().words(10));
+    }
+
+    public static Properties getProperties() {
         Properties config = new Properties();
         config.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, "samsoft");
         config.setProperty(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.Integer().getClass().getName());
         config.setProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, String().getClass().getName());
-        config.setProperty(StreamsConfig.STATE_DIR_CONFIG, "/Users/sambhav.jain/work/poc/stream-joins/stream-joins/state-store");
+        config.setProperty(StreamsConfig.STATE_DIR_CONFIG, "state-store");
         return config;
     }
 }
