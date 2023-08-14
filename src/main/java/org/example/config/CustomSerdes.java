@@ -1,6 +1,9 @@
-package org.example;
+package org.example.config;
 
 import org.apache.kafka.common.serialization.Serde;
+import org.example.model.Confirmation;
+import org.example.model.Order;
+import org.example.model.Payment;
 
 import static org.apache.kafka.common.serialization.Serdes.serdeFrom;
 

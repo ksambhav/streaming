@@ -1,10 +1,10 @@
-package org.example;
+package org.example.config;
 
 import org.apache.kafka.common.serialization.Deserializer;
 
 import java.io.IOException;
 
-import static org.example.JsonSerializer.MAPPER;
+import static org.example.config.JsonSerializer.MAPPER;
 
 public class JsonDeserializer<T> implements Deserializer<T> {
 

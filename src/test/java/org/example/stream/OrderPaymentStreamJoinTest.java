@@ -1,4 +1,4 @@
-package org.example;
+package org.example.stream;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +8,10 @@ import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.TestInputTopic;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.TopologyTestDriver;
+import org.example.config.CustomSerdes;
+import org.example.model.Order;
+import org.example.model.Payment;
+import org.example.stream.OrderPaymentStreamJoin;
 import org.instancio.Instancio;
 import org.instancio.InstancioApi;
 import org.junit.jupiter.api.Test;

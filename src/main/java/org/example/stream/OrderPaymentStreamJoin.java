@@ -1,4 +1,4 @@
-package org.example;
+package org.example.stream;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Serdes;
@@ -6,6 +6,9 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.errors.StreamsException;
 import org.apache.kafka.streams.kstream.*;
+import org.example.config.CustomSerdes;
+import org.example.model.Order;
+import org.example.model.Payment;
 
 import java.time.Duration;
 
