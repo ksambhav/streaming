@@ -63,7 +63,7 @@ public class OrderPaymentStream {
                         throw new StreamsException("Not the right timing " + epochSecond);
                     }
                     return epochSecond;
-                }).withName("PRO_ORDER")).filter((k, o) -> o.getAmount().intValue() > 0);
+                }).withName("PRO_ORDER"));
     }
 
 }
