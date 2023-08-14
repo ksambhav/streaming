@@ -25,7 +25,10 @@ public class OrderPaymentStream {
             order.setPaymentSuccess(payment.isSuccess());
             return order;
         };
-        StreamJoined<Integer, Order, Payment> joinedWith = StreamJoined.with(Serdes.Integer(), CustomSerdes.Order(), CustomSerdes.Payment());
+        StreamJoined<Integer, Order, Payment> joinedWith = StreamJoined
+                .with(Serdes.Integer(), CustomSerdes.Order(), CustomSerdes.Payment())
+                .withName("JOIN_ORDER_PAYMENT")
+                .withStoreName("JOIN_ORDER_PAYMENT_STORE");
         KStream<Integer, Order> join = orderStream.join(paymentKStream,
                 valueJoiner,
                 JoinWindows.ofTimeDifferenceAndGrace(Duration.ofSeconds(999), Duration.ofSeconds(100)),
@@ -48,7 +51,7 @@ public class OrderPaymentStream {
                         throw new StreamsException("Not the right timing " + epochSecond);
                     }
                     return epochSecond;
-                }));
+                }).withName("PRO_PAYMENT"));
     }
 
     private static KStream<Integer, Order> getOrderStream(StreamsBuilder streamsBuilder) {
@@ -60,7 +63,7 @@ public class OrderPaymentStream {
                         throw new StreamsException("Not the right timing " + epochSecond);
                     }
                     return epochSecond;
-                })).filter((k, o) -> o.getAmount().intValue() > 0);
+                }).withName("PRO_ORDER")).filter((k, o) -> o.getAmount().intValue() > 0);
     }
 
 }
