@@ -1,24 +1,18 @@
 package org.example.stream;
 
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.TestInputTopic;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.TopologyTestDriver;
 import org.example.config.CustomSerdes;
 import org.example.model.Order;
 import org.example.model.Payment;
-import org.instancio.Instancio;
 import org.instancio.InstancioApi;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Properties;
 import java.util.stream.Stream;
-
-import static org.apache.kafka.common.serialization.Serdes.String;
-import static org.instancio.Select.field;
 
 class OrderPaymentStreamJoinTest {
 
@@ -26,18 +20,17 @@ class OrderPaymentStreamJoinTest {
 
 
     @Test
-    void createStream() {
+    void testJoin() {
         Instant reference = Instant.now().minusSeconds(9999999);
         var timestampSupplier = new TimestampSupplier(reference, 0);
-        InstancioApi<Order> orderInstancioApi = getGenerate(timestampSupplier);
+        InstancioApi<Order> orderInstancioApi = MockDataUtil.getGenerate(timestampSupplier);
 
         TimestampSupplier paymentTimestampSupplier = new TimestampSupplier(reference, 5);
-        InstancioApi<Payment> paymentInstancioApi = getPaymentSupplier(paymentTimestampSupplier);
-
+        InstancioApi<Payment> paymentInstancioApi = MockDataUtil.getPaymentSupplier(paymentTimestampSupplier);
 
         OrderPaymentStreamJoin stream = new OrderPaymentStreamJoin();
         Topology topology = stream.createStream();
-        Properties config = getProperties();
+        Properties config = StreamUtils.getProperties();
         try (TopologyTestDriver testDriver = new TopologyTestDriver(topology, config)) {
             TestInputTopic<Integer, Order> orderTopic = testDriver.createInputTopic("orders", Serdes.Integer().serializer(), CustomSerdes.Order().serializer());
             Stream<Order> order = orderInstancioApi.stream().limit(ORDER_COUNT);
@@ -49,27 +42,4 @@ class OrderPaymentStreamJoinTest {
 
     }
 
-    public static InstancioApi<Payment> getPaymentSupplier(TimestampSupplier paymentTimestampSupplier) {
-        return Instancio.of(Payment.class)
-                .generate(field(Payment::getId), gen -> gen.intSeq().start(10))
-                .generate(field(Payment::getOrderId), gen -> gen.intSeq().start(1))
-                .generate(field(Payment::getAmount), gen -> gen.doubles().range((double) 0, 1000.0).as(BigDecimal::valueOf))
-                .supply(field(Payment::getCreatedOn), paymentTimestampSupplier);
-    }
-
-    public static InstancioApi<Order> getGenerate(TimestampSupplier timestampSupplier) {
-        return Instancio.of(Order.class)
-                .generate(field(Order::getId), gen -> gen.intSeq().start(1))
-                .supply(field(Order::getCreatedOn), timestampSupplier)
-                .generate(field(Order::getDescription), gen -> gen.text().loremIpsum().words(10));
-    }
-
-    public static Properties getProperties() {
-        Properties config = new Properties();
-        config.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, "samsoft");
-        config.setProperty(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.Integer().getClass().getName());
-        config.setProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, String().getClass().getName());
-        config.setProperty(StreamsConfig.STATE_DIR_CONFIG, "state-store");
-        return config;
-    }
 }

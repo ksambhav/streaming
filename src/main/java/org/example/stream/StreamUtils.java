@@ -4,12 +4,17 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.errors.StreamsException;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
 import org.example.config.CustomSerdes;
 import org.example.model.Order;
 import org.example.model.Payment;
+
+import java.util.Properties;
+
+import static org.apache.kafka.common.serialization.Serdes.String;
 
 @UtilityClass
 @Slf4j
@@ -36,5 +41,14 @@ public class StreamUtils {
                     }
                     return epochSecond;
                 }).withName("PRO_ORDER"));
+    }
+
+    public static Properties getProperties() {
+        Properties config = new Properties();
+        config.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, "samsoft");
+        config.setProperty(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.Integer().getClass().getName());
+        config.setProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, String().getClass().getName());
+        config.setProperty(StreamsConfig.STATE_DIR_CONFIG, "state-store");
+        return config;
     }
 }
