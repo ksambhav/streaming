@@ -12,4 +12,6 @@ public class Order {
     private Instant createdOn;
     private String description;
     private BigDecimal amount;
+    private Integer paymentId;
+    private boolean paymentSuccess;
 }

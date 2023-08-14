@@ -5,9 +5,9 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.errors.StreamsException;
-import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.Printed;
+import org.apache.kafka.streams.kstream.*;
+
+import java.time.Duration;
 
 @Slf4j
 public class OrderPaymentStream {
@@ -15,9 +15,25 @@ public class OrderPaymentStream {
     public Topology createStream() {
         StreamsBuilder streamsBuilder = new StreamsBuilder();
         KStream<Integer, Order> orderStream = getOrderStream(streamsBuilder);
-        orderStream.print(Printed.toSysOut());
+//        orderStream.print(Printed.toSysOut());
         KStream<Integer, Payment> paymentKStream = getPaymentKStream(streamsBuilder);
-        paymentKStream.print(Printed.toSysOut());
+//        paymentKStream.print(Printed.toSysOut());
+
+
+        ValueJoiner<Order, Payment, Order> valueJoiner = (order, payment) -> {
+            order.setPaymentId(payment.getId());
+            order.setPaymentSuccess(payment.isSuccess());
+            return order;
+        };
+        StreamJoined<Integer, Order, Payment> joinedWith = StreamJoined.with(Serdes.Integer(), CustomSerdes.Order(), CustomSerdes.Payment());
+        KStream<Integer, Order> join = orderStream.join(paymentKStream,
+                valueJoiner,
+                JoinWindows.ofTimeDifferenceAndGrace(Duration.ofSeconds(999), Duration.ofSeconds(100)),
+                joinedWith
+        );
+
+        join.print(Printed.toSysOut());
+
         Topology topology = streamsBuilder.build();
         log.info("{}", topology.describe());
         return topology;

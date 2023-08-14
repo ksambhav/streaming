@@ -68,10 +68,7 @@ class OrderPaymentStreamTest {
 
         OrderPaymentStream stream = new OrderPaymentStream();
         Topology topology = stream.createStream();
-        Properties config = new Properties();
-        config.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, "samsoft");
-        config.setProperty(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.Integer().getClass().getName());
-        config.setProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, String().getClass().getName());
+        Properties config = getProperties();
         try (TopologyTestDriver testDriver = new TopologyTestDriver(topology, config)) {
             TestInputTopic<Integer, Order> orderTopic = testDriver.createInputTopic("orders", Serdes.Integer().serializer(), CustomSerdes.Order().serializer());
             Stream<Order> order = orderInstancioApi.stream().limit(ORDER_COUNT);
@@ -81,5 +78,14 @@ class OrderPaymentStreamTest {
             paymentInstancioApi.stream().limit(ORDER_COUNT).toList().forEach(p -> paymentTopic.pipeInput(p.getOrderId(), p));
         }
 
+    }
+
+    private static Properties getProperties() {
+        Properties config = new Properties();
+        config.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, "samsoft");
+        config.setProperty(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.Integer().getClass().getName());
+        config.setProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, String().getClass().getName());
+        config.setProperty(StreamsConfig.STATE_DIR_CONFIG, "/Users/sambhav.jain/work/poc/stream-joins/stream-joins/state-store");
+        return config;
     }
 }
