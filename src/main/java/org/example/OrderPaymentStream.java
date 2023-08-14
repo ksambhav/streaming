@@ -11,7 +11,7 @@ public class OrderPaymentStream {
 
     public Topology createStream() {
         StreamsBuilder streamsBuilder = new StreamsBuilder();
-        KStream<String, Order> orderStream = streamsBuilder.stream("orders");
+        KStream<Integer, Order> orderStream = streamsBuilder.stream("orders");
         orderStream.print(Printed.toSysOut());
         Topology topology = streamsBuilder.build();
         log.info("{}", topology.describe());
