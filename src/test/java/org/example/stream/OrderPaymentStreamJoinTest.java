@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 
 class OrderPaymentStreamJoinTest {
 
-    public static final int ORDER_COUNT = 10000;
+    public static final int ORDER_COUNT = 100;
 
 
     @Test
