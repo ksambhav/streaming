@@ -10,7 +10,7 @@ import org.apache.kafka.streams.kstream.*;
 import java.time.Duration;
 
 @Slf4j
-public class OrderPaymentStream {
+public class OrderPaymentStreamJoin {
 
     public Topology createStream() {
         StreamsBuilder streamsBuilder = new StreamsBuilder();
@@ -31,7 +31,7 @@ public class OrderPaymentStream {
                 .withStoreName("JOIN_ORDER_PAYMENT_STORE");
         KStream<Integer, Order> join = orderStream.join(paymentKStream,
                 valueJoiner,
-                JoinWindows.ofTimeDifferenceAndGrace(Duration.ofSeconds(999), Duration.ofSeconds(100)),
+                JoinWindows.ofTimeDifferenceWithNoGrace(Duration.ofSeconds(5)),
                 joinedWith
         );
 

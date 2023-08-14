@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 import static org.apache.kafka.common.serialization.Serdes.String;
 import static org.instancio.Select.field;
 
-class OrderPaymentStreamTest {
+class OrderPaymentStreamJoinTest {
 
     public static final ObjectMapper MAPPER = new ObjectMapper();
     public static final int ORDER_COUNT = 10;
@@ -66,7 +66,7 @@ class OrderPaymentStreamTest {
                 .supply(field(Payment::getCreatedOn), paymentTimestampSupplier);
 
 
-        OrderPaymentStream stream = new OrderPaymentStream();
+        OrderPaymentStreamJoin stream = new OrderPaymentStreamJoin();
         Topology topology = stream.createStream();
         Properties config = getProperties();
         try (TopologyTestDriver testDriver = new TopologyTestDriver(topology, config)) {
