@@ -12,6 +12,7 @@ import org.instancio.Instancio;
 import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
+import java.util.stream.Stream;
 
 import static org.apache.kafka.common.serialization.Serdes.String;
 
@@ -32,9 +33,9 @@ class OrderPaymentStreamTest {
         config.setProperty(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.Integer().getClass().getName());
         config.setProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, String().getClass().getName());
         try (TopologyTestDriver testDriver = new TopologyTestDriver(topology, config)) {
-            TestInputTopic<Integer, String> orderTopic = testDriver.createInputTopic("orders", Serdes.Integer().serializer(), String().serializer());
-            Order order = Instancio.create(Order.class);
-            orderTopic.pipeInput(order.getId(), MAPPER.writeValueAsString(order));
+            TestInputTopic<Integer, Order> orderTopic = testDriver.createInputTopic("orders", Serdes.Integer().serializer(), CustomSerdes.Order().serializer());
+            Stream<Order> order = Instancio.stream(Order.class).limit(1000);
+            order.toList().forEach(o -> orderTopic.pipeInput(o.getId(), o));
         }
 
     }
