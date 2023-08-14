@@ -23,7 +23,7 @@ import static org.instancio.Select.field;
 class OrderPaymentStreamTest {
 
     public static final ObjectMapper MAPPER = new ObjectMapper();
-    public static final int ORDER_COUNT = 1000;
+    public static final int ORDER_COUNT = 10;
 
 
     static {
@@ -32,11 +32,13 @@ class OrderPaymentStreamTest {
 
     public static class TimestampSupplier implements Supplier<Instant> {
 
-        public static final Instant referenceTimeStamp;
+        private final Instant referenceTimeStamp;
         private int offset = 0;
 
-        static {
-            referenceTimeStamp = Instant.now().minusSeconds(99999999L);
+
+        public TimestampSupplier(Instant referenceTimeStamp, int initialOffsetSecs) {
+            this.referenceTimeStamp = referenceTimeStamp;
+            this.offset = initialOffsetSecs;
         }
 
         @Override
@@ -48,11 +50,20 @@ class OrderPaymentStreamTest {
 
     @Test
     void createStream() throws JsonProcessingException {
-
-        final Instant[] reference = {Instant.now().minusSeconds(9999999L)};
+        Instant reference = Instant.now().minusSeconds(9999999);
+        var timestampSupplier = new TimestampSupplier(reference, 0);
         InstancioApi<Order> orderInstancioApi = Instancio.of(Order.class)
-                .generate(field(Order::getDescription), gen -> gen.text().loremIpsum().words(10))
-                .supply(field(Order::getCreatedOn), TimestampSupplier::new);
+                .generate(field(Order::getId), gen -> gen.intSeq().start(1))
+                .supply(field(Order::getCreatedOn), timestampSupplier)
+                .generate(field(Order::getDescription), gen -> gen.text().loremIpsum().words(10));
+
+        TimestampSupplier paymentTimestampSupplier = new TimestampSupplier(reference, 5);
+        InstancioApi<Payment> paymentInstancioApi = Instancio.of(Payment.class)
+                .generate(field(Payment::getId), gen -> gen.intSeq().start(10))
+                .generate(field(Payment::getOrderId), gen -> gen.intSeq().start(1))
+                .generate(field(Payment::getAmount), gen -> gen.doubles().range((double) 0, 1000.0))
+                .supply(field(Payment::getCreatedOn), paymentTimestampSupplier);
+
 
         OrderPaymentStream stream = new OrderPaymentStream();
         Topology topology = stream.createStream();
@@ -64,6 +75,9 @@ class OrderPaymentStreamTest {
             TestInputTopic<Integer, Order> orderTopic = testDriver.createInputTopic("orders", Serdes.Integer().serializer(), CustomSerdes.Order().serializer());
             Stream<Order> order = orderInstancioApi.stream().limit(ORDER_COUNT);
             order.toList().forEach(o -> orderTopic.pipeInput(o.getId(), o));
+            //payments
+            TestInputTopic<Integer, Payment> paymentTopic = testDriver.createInputTopic("payments", Serdes.Integer().serializer(), CustomSerdes.Payment().serializer());
+            paymentInstancioApi.stream().limit(ORDER_COUNT).toList().forEach(p -> paymentTopic.pipeInput(p.getOrderId(), p));
         }
 
     }
