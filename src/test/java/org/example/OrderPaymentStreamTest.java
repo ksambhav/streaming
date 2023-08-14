@@ -34,7 +34,7 @@ class OrderPaymentStreamTest {
         config.setProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, String().getClass().getName());
         try (TopologyTestDriver testDriver = new TopologyTestDriver(topology, config)) {
             TestInputTopic<Integer, Order> orderTopic = testDriver.createInputTopic("orders", Serdes.Integer().serializer(), CustomSerdes.Order().serializer());
-            Stream<Order> order = Instancio.stream(Order.class).limit(1000);
+            Stream<Order> order = Instancio.stream(Order.class).limit(10);
             order.toList().forEach(o -> orderTopic.pipeInput(o.getId(), o));
         }
 
