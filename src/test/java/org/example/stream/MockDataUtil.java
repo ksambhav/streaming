@@ -8,12 +8,15 @@ import org.instancio.Instancio;
 import org.instancio.InstancioApi;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 import static org.instancio.Select.field;
 
 @Slf4j
 @UtilityClass
 public class MockDataUtil {
+    private static final Set<String> ITEMS = Set.of("Laptop", "Mobile", "PC", "Router", "Keyboard", "Tablet", "Speakers");
+
     public static InstancioApi<Payment> getPaymentSupplier(TimestampSupplier paymentTimestampSupplier) {
         return Instancio.of(Payment.class)
                 .generate(field(Payment::getId), gen -> gen.intSeq().start(10))
@@ -25,7 +28,8 @@ public class MockDataUtil {
     public static InstancioApi<Order> getGenerate(TimestampSupplier timestampSupplier) {
         return Instancio.of(Order.class)
                 .generate(field(Order::getId), gen -> gen.intSeq().start(1))
+                .generate(field(Order::getItemDescription), gen -> gen.oneOf(ITEMS))
                 .supply(field(Order::getCreatedOn), timestampSupplier)
-                .generate(field(Order::getDescription), gen -> gen.text().loremIpsum().words(10));
+                .generate(field(Order::getItemDescription), gen -> gen.text().loremIpsum().words(10));
     }
 }
