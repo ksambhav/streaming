@@ -14,7 +14,29 @@ public class OrderPaymentStream {
 
     public Topology createStream() {
         StreamsBuilder streamsBuilder = new StreamsBuilder();
-        KStream<Integer, Order> orderStream = streamsBuilder.stream("orders",
+        KStream<Integer, Order> orderStream = getOrderStream(streamsBuilder);
+        orderStream.print(Printed.toSysOut());
+        KStream<Integer, Payment> paymentKStream = getPaymentKStream(streamsBuilder);
+        paymentKStream.print(Printed.toSysOut());
+        Topology topology = streamsBuilder.build();
+        log.info("{}", topology.describe());
+        return topology;
+    }
+
+    private static KStream<Integer, Payment> getPaymentKStream(StreamsBuilder streamsBuilder) {
+        return streamsBuilder.stream("payments",
+                Consumed.with(Serdes.Integer(), CustomSerdes.Payment()).withTimestampExtractor((payment, l) -> {
+                    Payment value = (Payment) payment.value();
+                    long epochSecond = value.getCreatedOn().getEpochSecond();
+                    if (epochSecond < l) {
+                        throw new StreamsException("Not the right timing " + epochSecond);
+                    }
+                    return epochSecond;
+                }));
+    }
+
+    private static KStream<Integer, Order> getOrderStream(StreamsBuilder streamsBuilder) {
+        return streamsBuilder.stream("orders",
                 Consumed.with(Serdes.Integer(), CustomSerdes.Order()).withTimestampExtractor((consumerRecord, l) -> {
                     Order value = (Order) consumerRecord.value();
                     long epochSecond = value.getCreatedOn().getEpochSecond();
@@ -22,13 +44,7 @@ public class OrderPaymentStream {
                         throw new StreamsException("Not the right timing " + epochSecond);
                     }
                     return epochSecond;
-                }));
-        orderStream
-                .filter((k, o) -> o.getAmount().intValue() > 0)
-                .print(Printed.toSysOut());
-        Topology topology = streamsBuilder.build();
-        log.info("{}", topology.describe());
-        return topology;
+                })).filter((k, o) -> o.getAmount().intValue() > 0);
     }
 
 }

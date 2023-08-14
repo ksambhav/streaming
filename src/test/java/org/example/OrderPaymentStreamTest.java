@@ -12,6 +12,7 @@ import org.instancio.Instancio;
 import org.instancio.InstancioApi;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Properties;
 import java.util.function.Supplier;
@@ -61,7 +62,7 @@ class OrderPaymentStreamTest {
         InstancioApi<Payment> paymentInstancioApi = Instancio.of(Payment.class)
                 .generate(field(Payment::getId), gen -> gen.intSeq().start(10))
                 .generate(field(Payment::getOrderId), gen -> gen.intSeq().start(1))
-                .generate(field(Payment::getAmount), gen -> gen.doubles().range((double) 0, 1000.0))
+                .generate(field(Payment::getAmount), gen -> gen.doubles().range((double) 0, 1000.0).as(BigDecimal::valueOf))
                 .supply(field(Payment::getCreatedOn), paymentTimestampSupplier);
 
 
