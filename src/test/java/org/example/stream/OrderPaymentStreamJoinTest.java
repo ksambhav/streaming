@@ -1,8 +1,6 @@
 package org.example.stream;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.TestInputTopic;
@@ -11,7 +9,6 @@ import org.apache.kafka.streams.TopologyTestDriver;
 import org.example.config.CustomSerdes;
 import org.example.model.Order;
 import org.example.model.Payment;
-import org.example.stream.OrderPaymentStreamJoin;
 import org.instancio.Instancio;
 import org.instancio.InstancioApi;
 import org.junit.jupiter.api.Test;
@@ -19,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Properties;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static org.apache.kafka.common.serialization.Serdes.String;
@@ -27,34 +23,11 @@ import static org.instancio.Select.field;
 
 class OrderPaymentStreamJoinTest {
 
-    public static final ObjectMapper MAPPER = new ObjectMapper();
     public static final int ORDER_COUNT = 10;
 
 
-    static {
-        MAPPER.registerModule(new JavaTimeModule());
-    }
-
-    public static class TimestampSupplier implements Supplier<Instant> {
-
-        private final Instant referenceTimeStamp;
-        private int offset = 0;
-
-
-        public TimestampSupplier(Instant referenceTimeStamp, int initialOffsetSecs) {
-            this.referenceTimeStamp = referenceTimeStamp;
-            this.offset = initialOffsetSecs;
-        }
-
-        @Override
-        public Instant get() {
-            return referenceTimeStamp.plusSeconds(offset++);
-        }
-    }
-
-
     @Test
-    void createStream() throws JsonProcessingException {
+    void createStream() {
         Instant reference = Instant.now().minusSeconds(9999999);
         var timestampSupplier = new TimestampSupplier(reference, 0);
         InstancioApi<Order> orderInstancioApi = Instancio.of(Order.class)
