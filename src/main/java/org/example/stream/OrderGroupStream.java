@@ -8,6 +8,8 @@ import org.apache.kafka.streams.kstream.*;
 import org.example.config.CustomSerdes;
 import org.example.model.Order;
 
+import java.time.Duration;
+
 @Slf4j
 public class OrderGroupStream {
 
@@ -15,10 +17,13 @@ public class OrderGroupStream {
         StreamsBuilder streamsBuilder = new StreamsBuilder();
         KStream<Integer, Order> orderStream = StreamUtils.getOrderStream(streamsBuilder);
         KGroupedStream<String, Order> orderGroupedByItem = orderStream
-                .groupBy((k, v) -> v.getItemDescription(), Grouped.with("groupoo", Serdes.String(), CustomSerdes.Order()));
+                .groupBy((k, v) -> v.getItemDescription(),
+                        Grouped.with("groupoo", Serdes.String(), CustomSerdes.Order())
+                );
 
-
-        KTable<String, Long> stringLongKTable = orderGroupedByItem.count();
+        KTable<String, Long> stringLongKTable = orderGroupedByItem
+                .count();
+//                .suppress(Suppressed.untilTimeLimit(Duration.ofSeconds(2), Suppressed.BufferConfig.maxRecords(1000)));
         stringLongKTable.toStream().print(Printed.toSysOut());
         final Topology topology = streamsBuilder.build();
         log.info(topology.describe().toString());
