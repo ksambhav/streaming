@@ -29,7 +29,6 @@ public class MockDataUtil {
         return Instancio.of(Order.class)
                 .generate(field(Order::getId), gen -> gen.intSeq().start(1))
                 .generate(field(Order::getItemDescription), gen -> gen.oneOf(ITEMS))
-                .supply(field(Order::getCreatedOn), timestampSupplier)
-                .generate(field(Order::getItemDescription), gen -> gen.text().loremIpsum().words(10));
+                .supply(field(Order::getCreatedOn), timestampSupplier);
     }
 }
