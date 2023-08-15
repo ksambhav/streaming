@@ -13,7 +13,7 @@ import java.time.Instant;
 import java.util.Properties;
 import java.util.stream.Stream;
 
-import static org.example.stream.OrderPaymentStreamJoinTest.ORDER_COUNT;
+import static org.example.stream.MockDataUtil.ORDER_COUNT;
 
 class OrderGroupStreamTest {
 

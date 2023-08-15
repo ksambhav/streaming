@@ -8,14 +8,22 @@ import org.instancio.Instancio;
 import org.instancio.InstancioApi;
 
 import java.math.BigDecimal;
-import java.util.Set;
+import java.util.List;
 
 import static org.instancio.Select.field;
 
 @Slf4j
 @UtilityClass
 public class MockDataUtil {
-    private static final Set<String> ITEMS = Set.of("Laptop", "Mobile", "PC", "Router", "Keyboard", "Tablet", "Speakers");
+    public static final int ORDER_COUNT = 10000;
+    private static final List<String> ITEMS = List.of("Laptop",
+            "Mobile",
+            "PC",
+            "Router",
+            "Keyboard",
+            "Mice",
+            "Tablet",
+            "Speakers");
 
     public static InstancioApi<Payment> getPaymentSupplier(TimestampSupplier paymentTimestampSupplier) {
         return Instancio.of(Payment.class)

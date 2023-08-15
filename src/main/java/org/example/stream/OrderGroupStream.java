@@ -21,7 +21,8 @@ public class OrderGroupStream {
                         Grouped.with("groupoo", Serdes.String(), CustomSerdes.Order())
                 );
 
-        KTable<String, Long> stringLongKTable = orderGroupedByItem
+        var stringLongKTable = orderGroupedByItem
+                .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofSeconds(5)))
                 .count();
 //                .suppress(Suppressed.untilTimeLimit(Duration.ofSeconds(2), Suppressed.BufferConfig.maxRecords(1000)));
         stringLongKTable.toStream().print(Printed.toSysOut());

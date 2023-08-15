@@ -16,8 +16,6 @@ import java.util.stream.Stream;
 
 class OrderPaymentStreamJoinTest {
 
-    public static final int ORDER_COUNT = 100;
-
 
     @Test
     void testJoin() {
@@ -33,11 +31,11 @@ class OrderPaymentStreamJoinTest {
         Properties config = StreamUtils.getProperties();
         try (TopologyTestDriver testDriver = new TopologyTestDriver(topology, config)) {
             TestInputTopic<Integer, Order> orderTopic = testDriver.createInputTopic("orders", Serdes.Integer().serializer(), CustomSerdes.Order().serializer());
-            Stream<Order> order = orderInstancioApi.stream().limit(ORDER_COUNT);
+            Stream<Order> order = orderInstancioApi.stream().limit(MockDataUtil.ORDER_COUNT);
             order.toList().forEach(o -> orderTopic.pipeInput(o.getId(), o));
             //payments
             TestInputTopic<Integer, Payment> paymentTopic = testDriver.createInputTopic("payments", Serdes.Integer().serializer(), CustomSerdes.Payment().serializer());
-            paymentInstancioApi.stream().limit(ORDER_COUNT).toList().forEach(p -> paymentTopic.pipeInput(p.getOrderId(), p));
+            paymentInstancioApi.stream().limit(MockDataUtil.ORDER_COUNT).toList().forEach(p -> paymentTopic.pipeInput(p.getOrderId(), p));
         }
 
     }
