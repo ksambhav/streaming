@@ -15,7 +15,7 @@ import static org.instancio.Select.field;
 @Slf4j
 @UtilityClass
 public class MockDataUtil {
-    public static final int ORDER_COUNT = 10000;
+    public static final int ORDER_COUNT = 100;
     private static final List<String> ITEMS = List.of("Laptop",
             "Mobile",
             "PC",

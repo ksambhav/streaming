@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 public class TimestampSupplier implements Supplier<Instant> {
 
     private final Instant referenceTimeStamp;
-    private int offset = 0;
+    private int offset;
 
 
     public TimestampSupplier(Instant referenceTimeStamp, int initialOffsetSecs) {
