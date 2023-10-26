@@ -17,7 +17,7 @@ spec:
           image: samsoft:latest
           imagePullPolicy: IfNotPresent
           resources:
-            request:
+            requests:
               memory: "400Mi"
               cpu: "200m"
             limits:
