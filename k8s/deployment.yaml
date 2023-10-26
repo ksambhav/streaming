@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streaming-app
+  template:
+    metadata:
+      labels:
+        app: streaming-app
+    spec:
+      containers:
+        - name: streaming-app
+          image: samsoft:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            request:
+              memory: "500Mi"
+              cpu: "200m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8080
+              name: web
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: my-streaming-service
+  labels:
+    monitored: "yes"
+spec:
+  selector:
+    app: streaming-app
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: web
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    release: my-observability
+  name: my-smon
+  namespace: default
+spec:
+  endpoints:
+    - port: web
+      scheme: http
+      path: /actuator/prometheus
+  selector:
+    matchLabels:
+      monitored: "yes"
