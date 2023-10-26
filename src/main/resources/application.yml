@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: my-streaming-app
+server:
+  port: 8080
