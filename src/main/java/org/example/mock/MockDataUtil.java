@@ -1,7 +1,8 @@
-package org.example.stream;
+package org.example.mock;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.example.mock.TimestampSupplier;
 import org.example.model.Order;
 import org.example.model.Payment;
 import org.instancio.Instancio;

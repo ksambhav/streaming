@@ -1,4 +1,4 @@
-package org.example.stream;
+package org.example.mock;
 
 import java.time.Instant;
 import java.util.function.Supplier;

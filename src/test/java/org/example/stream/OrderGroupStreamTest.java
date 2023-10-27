@@ -5,6 +5,8 @@ import org.apache.kafka.streams.TestInputTopic;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.TopologyTestDriver;
 import org.example.config.CustomSerdes;
+import org.example.mock.MockDataUtil;
+import org.example.mock.TimestampSupplier;
 import org.example.model.Order;
 import org.instancio.InstancioApi;
 import org.junit.jupiter.api.Test;
@@ -13,7 +15,7 @@ import java.time.Instant;
 import java.util.Properties;
 import java.util.stream.Stream;
 
-import static org.example.stream.MockDataUtil.ORDER_COUNT;
+import static org.example.mock.MockDataUtil.ORDER_COUNT;
 
 class OrderGroupStreamTest {
 

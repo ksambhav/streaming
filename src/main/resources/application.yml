@@ -3,12 +3,14 @@ spring:
     banner-mode: "off"
   application:
     name: my-streaming-app
+  kafka:
+    bootstrap-servers: my-cluster-kafka-bootstrap:9092
 server:
   port: 8080
   shutdown: graceful
   tomcat:
     threads:
-      max: 50
+      max: 10
 management:
   endpoints:
     enabled-by-default: true
@@ -24,4 +26,6 @@ management:
       enabled: true
     readinessstate:
       enabled: true
+
+
 

@@ -2,8 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: streaming-app
+  namespace: kafka
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: streaming-app
@@ -11,6 +12,7 @@ spec:
     metadata:
       labels:
         app: streaming-app
+        monitored: "yes"
     spec:
       containers:
         - name: streaming-app
@@ -27,36 +29,47 @@ spec:
             - containerPort: 8080
               name: web
 ---
-
-apiVersion: v1
-kind: Service
-metadata:
-  namespace: default
-  name: my-streaming-service
-  labels:
-    monitored: "yes"
-spec:
-  selector:
-    app: streaming-app
-  ports:
-    - port: 8080
-      targetPort: 8080
-      name: web
-
----
-
 apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
+kind: PodMonitor
 metadata:
+  namespace: kafka
+  name: my-pmon
   labels:
-    release: my-observability
-  name: my-smon
-  namespace: default
+    team: frontend
+    release: observe
 spec:
-  endpoints:
-    - port: web
-      scheme: http
-      path: /actuator/prometheus
   selector:
     matchLabels:
       monitored: "yes"
+  podMetricsEndpoints:
+    - port: web
+      scheme: http
+      path: /actuator/prometheus
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  namespace: kafka
+  name: payments
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  partitions: 1
+  replicas: 1
+  config:
+    retention.ms: 7200000
+    segment.bytes: 1073741824
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  namespace: kafka
+  name: orders
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  partitions: 1
+  replicas: 1
+  config:
+    retention.ms: 7200000
+    segment.bytes: 1073741824
