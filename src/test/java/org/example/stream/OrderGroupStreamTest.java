@@ -23,7 +23,7 @@ class OrderGroupStreamTest {
     void createTopology() {
         Instant reference = Instant.now().minusSeconds(9999999);
         var timestampSupplier = new TimestampSupplier(reference, 0);
-        InstancioApi<Order> orderInstancioApi = MockDataUtil.getGenerate(timestampSupplier);
+        InstancioApi<Order> orderInstancioApi = MockDataUtil.getGenerate(timestampSupplier,1);
         Properties config = StreamUtils.getProperties();
         Topology topology = new OrderGroupStream().createTopology();
         try (TopologyTestDriver testDriver = new TopologyTestDriver(topology, config)) {

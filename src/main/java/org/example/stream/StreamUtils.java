@@ -24,9 +24,11 @@ public class StreamUtils {
                 Consumed.with(Serdes.Integer(), CustomSerdes.Payment()).withTimestampExtractor((payment, l) -> {
                     Payment value = (Payment) payment.value();
                     long epochSecond = value.getCreatedOn().getEpochSecond();
+/*
                     if (epochSecond < l) {
                         throw new StreamsException("Not the right timing " + epochSecond);
                     }
+*/
                     return epochSecond;
                 }).withName("PRO_PAYMENT"));
     }
@@ -36,9 +38,9 @@ public class StreamUtils {
                 Consumed.with(Serdes.Integer(), CustomSerdes.Order()).withTimestampExtractor((consumerRecord, l) -> {
                     Order value = (Order) consumerRecord.value();
                     long epochSecond = value.getCreatedOn().getEpochSecond();
-                    if (epochSecond < l) {
+                    /*if (epochSecond < l) {
                         throw new StreamsException("Not the right timing " + epochSecond);
-                    }
+                    }*/
                     return epochSecond;
                 }).withName("PRO_ORDER"));
     }

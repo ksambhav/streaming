@@ -5,6 +5,9 @@ spring:
     name: my-streaming-app
   kafka:
     bootstrap-servers: my-cluster-kafka-bootstrap:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 server:
   port: 8080
   shutdown: graceful

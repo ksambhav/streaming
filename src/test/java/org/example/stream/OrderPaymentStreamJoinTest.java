@@ -23,10 +23,10 @@ class OrderPaymentStreamJoinTest {
     void testJoin() {
         Instant reference = Instant.now().minusSeconds(9999999);
         var timestampSupplier = new TimestampSupplier(reference, 0);
-        InstancioApi<Order> orderInstancioApi = MockDataUtil.getGenerate(timestampSupplier);
+        InstancioApi<Order> orderInstancioApi = MockDataUtil.getGenerate(timestampSupplier,1);
 
         TimestampSupplier paymentTimestampSupplier = new TimestampSupplier(reference, 5);
-        InstancioApi<Payment> paymentInstancioApi = MockDataUtil.getPaymentSupplier(paymentTimestampSupplier);
+        InstancioApi<Payment> paymentInstancioApi = MockDataUtil.getPaymentSupplier(paymentTimestampSupplier,1);
 
         OrderPaymentStreamJoin stream = new OrderPaymentStreamJoin();
         Topology topology = stream.createStream();

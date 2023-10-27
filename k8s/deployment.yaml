@@ -4,7 +4,7 @@ metadata:
   name: streaming-app
   namespace: kafka
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: streaming-app
@@ -20,11 +20,11 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             requests:
-              memory: "400Mi"
-              cpu: "200m"
+              memory: "1G"
+              cpu: "600m"
             limits:
-              memory: "500Mi"
-              cpu: "500m"
+              memory: "2G"
+              cpu: "800m"
           ports:
             - containerPort: 8080
               name: web
@@ -54,10 +54,10 @@ metadata:
   labels:
     strimzi.io/cluster: my-cluster
 spec:
-  partitions: 1
+  partitions: 20
   replicas: 1
   config:
-    retention.ms: 7200000
+    retention.days: 2
     segment.bytes: 1073741824
 ---
 apiVersion: kafka.strimzi.io/v1beta2
@@ -68,8 +68,36 @@ metadata:
   labels:
     strimzi.io/cluster: my-cluster
 spec:
-  partitions: 1
+  partitions: 20
   replicas: 1
   config:
-    retention.ms: 7200000
+    retention.days: 2
+    segment.bytes: 1073741824
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  namespace: kafka
+  name: failed-order
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  partitions: 20
+  replicas: 1
+  config:
+    retention.days: 2
+    segment.bytes: 1073741824
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  namespace: kafka
+  name: success-order
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  partitions: 20
+  replicas: 1
+  config:
+    retention.days: 2
     segment.bytes: 1073741824

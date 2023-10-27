@@ -11,17 +11,21 @@ import org.example.model.Payment;
 
 import java.time.Duration;
 
+import static org.apache.kafka.streams.kstream.Branched.withConsumer;
+
 @Slf4j
 public class OrderPaymentStreamJoin {
 
-    public Topology createStream() {
+    public static Topology createStream() {
         StreamsBuilder streamsBuilder = new StreamsBuilder();
         KStream<Integer, Order> orderStream = StreamUtils.getOrderStream(streamsBuilder);
-//        orderStream.print(Printed.toSysOut());
         KStream<Integer, Payment> paymentKStream = StreamUtils.getPaymentKStream(streamsBuilder);
-//        paymentKStream.print(Printed.toSysOut());
+        return getOrderPaymentTopology(orderStream, paymentKStream, streamsBuilder);
+    }
 
-
+    public static Topology getOrderPaymentTopology(KStream<Integer, Order> orderStream,
+                                                   KStream<Integer, Payment> paymentKStream,
+                                                   StreamsBuilder streamsBuilder) {
         ValueJoiner<Order, Payment, Order> valueJoiner = (order, payment) -> {
             order.setPaymentId(payment.getId());
             order.setPaymentSuccess(payment.isSuccess());
@@ -31,14 +35,14 @@ public class OrderPaymentStreamJoin {
                 .with(Serdes.Integer(), CustomSerdes.Order(), CustomSerdes.Payment())
                 .withName("JOIN_ORDER_PAYMENT")
                 .withStoreName("JOIN_ORDER_PAYMENT_STORE");
-        KStream<Integer, Order> join = orderStream.join(paymentKStream,
+        KStream<Integer, Order> joined = orderStream.join(paymentKStream,
                 valueJoiner,
                 JoinWindows.ofTimeDifferenceWithNoGrace(Duration.ofSeconds(5)),
                 joinedWith
         );
-
-        join.print(Printed.toSysOut());
-
+        joined.split(Named.as("order_status"))
+                .branch((orderId, joinedorder) -> joinedorder.isPaymentSuccess(), withConsumer(ks -> ks.to("success-order", Produced.with(Serdes.Integer(), CustomSerdes.Order()))))
+                .defaultBranch(withConsumer(ks -> ks.to("failed-order", Produced.with(Serdes.Integer(), CustomSerdes.Order()))));
         Topology topology = streamsBuilder.build();
         log.info("{}", topology.describe());
         return topology;
