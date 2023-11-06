@@ -1,6 +1,7 @@
 package org.example;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.boot.autoconfigure.kafka.StreamsBuilderFactoryBeanCustomizer;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.EnableKafkaStreams;
@@ -28,6 +30,9 @@ import org.springframework.kafka.streams.KafkaStreamsMicrometerListener;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -79,6 +84,8 @@ public class MyApplication {
         props.put(BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers().get(0));
         props.put(DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         props.put(DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
+        props.put(TASK_TIMEOUT_MS_CONFIG, 5_000);
+//        props.put(NUM_STANDBY_REPLICAS_CONFIG, 1);
         return new KafkaStreamsConfiguration(props);
     }
 
@@ -88,31 +95,55 @@ public class MyApplication {
     }
 
     @Component
+    @Data
+    @ConfigurationProperties(prefix = "mock")
+    public static class MockDataProperties {
+        private int batchSize = 200_000;
+    }
+
+    @RestController
+    @Slf4j
+    @RequiredArgsConstructor
+    public static class MockDataPropController {
+
+        private final MockDataProperties mockDataProperties;
+
+        @GetMapping("/mock/batch/size")
+        void updateBatchSize(@RequestParam int batchSize) {
+            log.info("Updating mock data size to = {}", batchSize);
+            mockDataProperties.setBatchSize(batchSize);
+        }
+    }
+
+    @Component
     @Slf4j
     @RequiredArgsConstructor
     public static class MockDataFeeder {
 
         private int orderId = 1;
 
-        public static final int BATCH_SIZE = 200_000;
 
         private final Supplier<Instant> currenTimestampSupplier = Instant::now;
 
 
         private final KafkaTemplate<Integer, Object> kafkaTemplate;
 
+        private final MockDataProperties mockDataProperties;
+
 
         @SneakyThrows
         @Scheduled(fixedDelay = 10, timeUnit = SECONDS, initialDelay = 30)
         void sendMockData() {
+            int batchSize = mockDataProperties.getBatchSize();
             InstancioApi<Order> orderInstancioApi = MockDataUtil.getGenerate(currenTimestampSupplier, orderId);
             log.info("Sending mock order data");
-            orderInstancioApi.stream().limit(BATCH_SIZE).forEach(order -> kafkaTemplate.send("orders", order.getId(), order));
+            long sentCount = orderInstancioApi.stream().limit(batchSize).map(order -> kafkaTemplate.send("orders", order.getId(), order)).count();
             Thread.sleep(5000);
             log.info("Sending mock payment data");
             InstancioApi<Payment> paymentInstancioApi = getPaymentSupplier(currenTimestampSupplier, orderId);
-            paymentInstancioApi.stream().limit(BATCH_SIZE).forEach(payment -> kafkaTemplate.send("payments", payment.getOrderId(), payment));
-            orderId += BATCH_SIZE;
+            long paymentSentCount = paymentInstancioApi.stream().limit(batchSize).map(payment -> kafkaTemplate.send("payments", payment.getOrderId(), payment)).count();
+            log.info("Send {} orders and {} payments", sentCount, paymentSentCount);
+            orderId += batchSize;
         }
 
 

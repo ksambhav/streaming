@@ -4,6 +4,7 @@ JVM_OPTS="
 -server
 -XX:+UseZGC
 -XX:MaxRAMPercentage=75
+-XX:InitialRAMPercentage=75
 -XX:+HeapDumpOnOutOfMemoryError
 -Xss256k
 "

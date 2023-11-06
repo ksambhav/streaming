@@ -12,6 +12,8 @@ import org.example.model.Payment;
 import java.time.Duration;
 
 import static org.apache.kafka.streams.kstream.Branched.withConsumer;
+import static org.apache.kafka.streams.kstream.Produced.*;
+import static org.example.config.CustomSerdes.*;
 
 @Slf4j
 public class OrderPaymentStreamJoin {
@@ -32,17 +34,19 @@ public class OrderPaymentStreamJoin {
             return order;
         };
         StreamJoined<Integer, Order, Payment> joinedWith = StreamJoined
-                .with(Serdes.Integer(), CustomSerdes.Order(), CustomSerdes.Payment())
+                .with(Serdes.Integer(), Order(), Payment())
                 .withName("JOIN_ORDER_PAYMENT")
                 .withStoreName("JOIN_ORDER_PAYMENT_STORE");
+        //orderStream is the primary operator of this join
         KStream<Integer, Order> joined = orderStream.join(paymentKStream,
                 valueJoiner,
                 JoinWindows.ofTimeDifferenceWithNoGrace(Duration.ofSeconds(5)),
                 joinedWith
         );
         joined.split(Named.as("order_status"))
-                .branch((orderId, joinedorder) -> joinedorder.isPaymentSuccess(), withConsumer(ks -> ks.to("success-order", Produced.with(Serdes.Integer(), CustomSerdes.Order()))))
-                .defaultBranch(withConsumer(ks -> ks.to("failed-order", Produced.with(Serdes.Integer(), CustomSerdes.Order()))));
+                .branch((orderId, joinedorder) -> joinedorder.isPaymentSuccess(),
+                        withConsumer(ks -> ks.to("success-order", with(Serdes.Integer(), Order()))))
+                .defaultBranch(withConsumer(ks -> ks.to("failed-order", with(Serdes.Integer(), Order()))));
         Topology topology = streamsBuilder.build();
         log.info("{}", topology.describe());
         return topology;
