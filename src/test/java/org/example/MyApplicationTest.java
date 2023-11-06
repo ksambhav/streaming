@@ -11,6 +11,8 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import java.util.Comparator;
 import java.util.List;
 
+import static java.util.Comparator.comparing;
+
 @Slf4j
 @SpringBootTest
 @EmbeddedKafka(topics = {"orders", "payments"})
@@ -19,10 +21,11 @@ class MyApplicationTest {
     @Test
     void test(@Autowired MeterRegistry meterRegistry) {
         List<Meter> meterList = meterRegistry.getMeters().stream()
-                .sorted(Comparator.comparing(meter -> meter.getId().getName())).toList();
-        meterList.forEach(meter -> {
-            log.info("{},{}", meter.getId().getName(), meter.getId().getDescription());
-        });
+                .sorted(comparing(meter -> meter.getId().getName())).toList();
+        meterList.forEach(meter -> log.info("{},{},{}",
+                meter.getId().getName(),
+                meter.getId().getDescription(),
+                meter.getId().getBaseUnit()));
     }
 
 }

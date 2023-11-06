@@ -1,33 +1,45 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: streaming-app
+  name: kstream-app
   namespace: kafka
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
-      app: streaming-app
+      app: kstream-app
   template:
     metadata:
       labels:
-        app: streaming-app
+        app: kstream-app
         monitored: "yes"
     spec:
       containers:
-        - name: streaming-app
+        - name: kstream-app
           image: samsoft:latest
           imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: "1G"
-              cpu: "600m"
+              cpu: "800m"
             limits:
-              memory: "2G"
+              memory: "1G"
               cpu: "800m"
           ports:
             - containerPort: 8080
               name: web
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 15
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
@@ -54,7 +66,7 @@ metadata:
   labels:
     strimzi.io/cluster: my-cluster
 spec:
-  partitions: 20
+  partitions: 5
   replicas: 1
   config:
     retention.days: 2
@@ -68,7 +80,7 @@ metadata:
   labels:
     strimzi.io/cluster: my-cluster
 spec:
-  partitions: 20
+  partitions: 5
   replicas: 1
   config:
     retention.days: 2
@@ -82,7 +94,7 @@ metadata:
   labels:
     strimzi.io/cluster: my-cluster
 spec:
-  partitions: 20
+  partitions: 5
   replicas: 1
   config:
     retention.days: 2
@@ -96,7 +108,7 @@ metadata:
   labels:
     strimzi.io/cluster: my-cluster
 spec:
-  partitions: 20
+  partitions: 5
   replicas: 1
   config:
     retention.days: 2
