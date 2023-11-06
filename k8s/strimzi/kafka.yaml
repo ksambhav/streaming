@@ -1,0 +1,49 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: my-cluster
+  namespace: strimzi
+  annotations: # (1)
+#    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+spec:
+  kafka:
+    config:
+      offsets.topic.replication.factor: 3
+      transaction.state.log.replication.factor: 3
+      transaction.state.log.min.isr: 2
+      default.replication.factor: 3
+      min.insync.replicas: 2
+      inter.broker.protocol.version: '3.6'
+    storage: # (2)
+      type: ephemeral
+      size: 10Gi
+      deleteClaim: true
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+    version: 3.6.0
+    replicas: 3
+    metricsConfig: # (3)
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          name: kafka-metrics
+          key: kafka-metrics-config.yml
+  entityOperator:
+    topicOperator: { }
+    userOperator: { }
+  cruiseControl: { } # (4)
+  # (5)
+  zookeeper:
+    storage:
+      type: ephemeral 
+      deleteClaim: true
+      size: 2Gi
+    replicas: 3
