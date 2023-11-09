@@ -24,6 +24,8 @@ public class MockDataUtil {
             "Router",
             "Keyboard",
             "Graphics Card",
+            "Motherboard",
+            "AIO Cooling",
             "Mice",
             "Tablet",
             "Speakers");

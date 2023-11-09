@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Supplier;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -70,7 +71,7 @@ public class MyApplication {
     public Topology orderPaymentTopology(KStream<Integer, Payment> paymentStream,
                                          KStream<Integer, Order> orderStream,
                                          StreamsBuilder streamsBuilder) {
-        log.info("Creating topology");
+        log.info("Creating topology. Size of default forkJoinPool={}", ForkJoinPool.commonPool().getPoolSize());
         return OrderPaymentStreamJoin.getOrderPaymentTopology(orderStream, paymentStream, streamsBuilder);
     }
 

@@ -28,8 +28,7 @@ class OrderPaymentStreamJoinTest {
         TimestampSupplier paymentTimestampSupplier = new TimestampSupplier(reference, 5);
         InstancioApi<Payment> paymentInstancioApi = MockDataUtil.getPaymentSupplier(paymentTimestampSupplier,1);
 
-        OrderPaymentStreamJoin stream = new OrderPaymentStreamJoin();
-        Topology topology = stream.createStream();
+        Topology topology = OrderPaymentStreamJoin.createStream();
         Properties config = StreamUtils.getProperties();
         try (TopologyTestDriver testDriver = new TopologyTestDriver(topology, config)) {
             TestInputTopic<Integer, Order> orderTopic = testDriver.createInputTopic("orders", Serdes.Integer().serializer(), CustomSerdes.Order().serializer());
