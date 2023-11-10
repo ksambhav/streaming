@@ -5,15 +5,16 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
-import org.example.config.CustomSerdes;
 import org.example.model.Order;
 import org.example.model.Payment;
 
 import java.time.Duration;
 
 import static org.apache.kafka.streams.kstream.Branched.withConsumer;
-import static org.apache.kafka.streams.kstream.Produced.*;
-import static org.example.config.CustomSerdes.*;
+import static org.apache.kafka.streams.kstream.JoinWindows.ofTimeDifferenceWithNoGrace;
+import static org.apache.kafka.streams.kstream.Produced.with;
+import static org.example.config.CustomSerdes.Order;
+import static org.example.config.CustomSerdes.Payment;
 
 @Slf4j
 public class OrderPaymentStreamJoin {
@@ -31,6 +32,7 @@ public class OrderPaymentStreamJoin {
         ValueJoiner<Order, Payment, Order> valueJoiner = (order, payment) -> {
             order.setPaymentId(payment.getId());
             order.setPaymentSuccess(payment.isSuccess());
+            log.debug("Joined {} with {} with success={}", order.getId(), payment.getId(), payment.isSuccess());
             return order;
         };
         StreamJoined<Integer, Order, Payment> joinedWith = StreamJoined
@@ -40,7 +42,7 @@ public class OrderPaymentStreamJoin {
         //orderStream is the primary operator of this join
         KStream<Integer, Order> joined = orderStream.join(paymentKStream,
                 valueJoiner,
-                JoinWindows.ofTimeDifferenceWithNoGrace(Duration.ofSeconds(5)),
+                ofTimeDifferenceWithNoGrace(Duration.ofSeconds(100)),
                 joinedWith
         );
         joined.split(Named.as("order_status"))

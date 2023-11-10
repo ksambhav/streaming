@@ -1,15 +1,10 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: kstream-app
   namespace: kafka
 spec:
   replicas: 2
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-    maxSurge: 1
-    maxUnavailable: 1
   selector:
     matchLabels:
       app: kstream-app
@@ -19,14 +14,21 @@ spec:
         app: kstream-app
         monitored: "yes"
     spec:
+      volumes:
+        - name: state-dir
+          hostPath:
+            path: stream-state-store
       containers:
         - name: kstream-app
           image: samsoft:latest
           imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: state-dir
+              mountPath: stream-state-store
           resources:
             requests:
               memory: "1G"
-              cpu: "200m"
+              cpu: "120m"
             limits:
               memory: "1G"
           ports:
@@ -37,13 +39,19 @@ spec:
               path: /actuator/health/liveness
               port: 8080
               scheme: HTTP
-            initialDelaySeconds: 10
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
               port: 8080
               scheme: HTTP
-            initialDelaySeconds: 10
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
@@ -51,7 +59,6 @@ metadata:
   namespace: kafka
   name: my-pmon
   labels:
-    team: frontend
     release: observe
 spec:
   selector:
@@ -61,6 +68,7 @@ spec:
     - port: web
       scheme: http
       path: /actuator/prometheus
+      interval: 2s
 ---
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic

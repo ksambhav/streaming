@@ -7,6 +7,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.example.mock.MockDataUtil;
@@ -79,14 +80,14 @@ public class MyApplication {
     public KafkaStreamsConfiguration defaultKafkaStreamsConfig(KafkaProperties kafkaProperties) {
         log.info("Creating defaultKafkaStreamsConfig using {}", kafkaProperties.getBootstrapServers().get(0));
         Map<String, Object> props = new HashMap<>();
-        props.put(APPLICATION_ID_CONFIG, "streams-app-v6");
+        props.put(APPLICATION_ID_CONFIG, "streams-app-v7");
         props.put(NUM_STREAM_THREADS_CONFIG, 2);
         props.put(PROCESSING_GUARANTEE_CONFIG, EXACTLY_ONCE_V2);
         props.put(BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers().get(0));
         props.put(DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         props.put(DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         props.put(TASK_TIMEOUT_MS_CONFIG, 5_000);
-//        props.put(NUM_STANDBY_REPLICAS_CONFIG, 1);
+        props.put(STATE_DIR_CONFIG, "state-dir");
         return new KafkaStreamsConfiguration(props);
     }
 
@@ -99,7 +100,7 @@ public class MyApplication {
     @Data
     @ConfigurationProperties(prefix = "mock")
     public static class MockDataProperties {
-        private int batchSize = 200_000;
+        private int batchSize = 5_000;
     }
 
     @RestController

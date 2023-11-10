@@ -2,8 +2,10 @@ package org.example.stream;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.processor.TimestampExtractor;
 import org.example.model.Order;
 import org.example.model.Payment;
 
@@ -19,14 +21,20 @@ import static org.example.config.CustomSerdes.Payment;
 @UtilityClass
 @Slf4j
 public class StreamUtils {
+
+
     public static KStream<Integer, Payment> getPaymentKStream(StreamsBuilder streamsBuilder) {
         return streamsBuilder.stream("payments",
-                with(Integer(), Payment()).withName("PROCESSOR_PAYMENT"));
+                with(Integer(), Payment())
+                        .withTimestampExtractor((record, partitionTime) -> ((Payment) record.value()).getCreatedOn().getEpochSecond())
+                        .withName("PAYMENT"));
     }
 
     public static KStream<Integer, Order> getOrderStream(StreamsBuilder streamsBuilder) {
         return streamsBuilder.stream("orders",
-                with(Integer(), Order()).withName("PROCESSOR_ORDER"));
+                with(Integer(), Order())
+                        .withTimestampExtractor((record, partitionTime) -> ((Order) record.value()).getCreatedOn().getEpochSecond())
+                        .withName("ORDER"));
     }
 
     public static Properties getProperties() {
